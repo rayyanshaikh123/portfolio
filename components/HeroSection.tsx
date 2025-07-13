@@ -89,6 +89,31 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
           ${theme === 'dark' ? 'bg-cyan-500 text-white' : 'bg-cyan-100 text-cyan-700'}`}
       >
         Portfolio
+        {/* Secret invisible button overlay */}
+        <button
+          aria-label="Admin Login"
+          onClick={() => {
+            const secret = window.prompt('Enter the secret:');
+            if (secret === 'kamlesh') {
+              localStorage.setItem('adminSecret', 'kamlesh');
+              window.location.href = '/admin-login';
+            }
+          }}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            opacity: 0,
+            pointerEvents: 'auto',
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            zIndex: 30,
+          }}
+          tabIndex={0}
+        />
       </span>
       {/* Particle Animation as the main centerpiece */}
       <Component theme={theme} />

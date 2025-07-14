@@ -316,7 +316,7 @@ function CertificateSection({ theme }: { theme: 'dark' | 'light' }) {
                   }}
                 >
                   {/* Pin SVG at the top center */}
-                  <div className="absolute -top-6 md:-top-7 left-1/2 -translate-x-1/2 z-20">
+                  <div className="absolute -top-6 md:-top-5 left-1/2 -translate-x-1/2 z-20">
                     <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="16" cy="10" r="7" fill={theme === 'dark' ? '#e2c290' : '#c2410c'} stroke="#222" strokeWidth="2" />
                       <rect x="14.5" y="16" width="3" height="12" rx="1.5" fill="#222" />

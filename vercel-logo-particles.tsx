@@ -18,11 +18,11 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
 
   useEffect(() => {
     // Inject Orbiton font from Google Fonts if not already present
-    if (!document.getElementById('orbiton-font')) {
+    if (!document.getElementById('orbitron-font')) {
       const link = document.createElement('link')
-      link.id = 'orbiton-font'
+      link.id = 'orbitron-font'
       link.rel = 'stylesheet'
-      link.href = 'https://fonts.googleapis.com/css2?family=Orbiton:wght@700&display=swap'
+      link.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap'
       document.head.appendChild(link)
     }
     const canvas = canvasRef.current
@@ -94,8 +94,8 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
       } else {
         ctx.fillStyle = theme === 'dark' ? 'white' : 'black'
         // Draw text as before
-        const fontSize = isMobile ? 48 : 120
-        ctx.font = `bold ${fontSize}px Orbiton, monospace`
+        const fontSize = isMobile ? 32 : 120
+        ctx.font = `bold ${fontSize}px Orbitron, Arial, sans-serif`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         const text = 'RAYYAN SHAIKH'
@@ -156,7 +156,7 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
               baseY: y,
               size: Math.random() * 1 + 0.5,
               color: theme === 'dark' ? 'white' : 'black',
-              scatteredColor: theme === 'dark' ? 'white' : 'black',
+              scatteredColor: type === 'text' ? 'red' : (theme === 'dark' ? 'white' : 'black'),
               isAWS: false,
               life: Math.random() * 100 + 50
             }

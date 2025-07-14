@@ -46,6 +46,67 @@ const recentActivity = [
 export default function DashboardOverview() {
   const [activeSection, setActiveSection] = useState('projects')
 
+  // Dynamic stats state
+  const [stats, setStats] = useState({
+    projects: 0,
+    certificates: 0,
+    skills: 0,
+    messages: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchStatsAndActivity() {
+      try {
+        // Fetch all in parallel
+        const [projectsRes, certsRes, skillsRes, messagesRes, achievementsRes] = await Promise.all([
+          fetch('/api/projects'),
+          fetch('/api/certificates'),
+          fetch('/api/skills'),
+          fetch('/api/contact'),
+          fetch('/api/achievements'),
+        ]);
+        const [projects, certificates, skills, messages, achievements] = await Promise.all([
+          projectsRes.json(),
+          certsRes.json(),
+          skillsRes.json(),
+          messagesRes.json(),
+          achievementsRes.json(),
+        ]);
+        setStats({
+          projects: Array.isArray(projects) ? projects.length : (projects.projects?.length || 0),
+          certificates: Array.isArray(certificates) ? certificates.length : (certificates.certificates?.length || 0),
+          skills: Array.isArray(skills) ? skills.length : (skills.skills?.length || 0),
+          messages: Array.isArray(messages) ? messages.length : (messages.messages?.length || 0),
+        });
+        // Build recent activity from latest items
+        const activities: any[] = [];
+        // Projects
+        (Array.isArray(projects) ? projects : projects.projects || []).slice(0, 3).forEach((p: any) => {
+          activities.push({ date: p.createdAt?.slice(0, 10) || '', event: `Added new project: ${p.title}` });
+        });
+        // Certificates
+        (Array.isArray(certificates) ? certificates : certificates.certificates || []).slice(0, 2).forEach((c: any) => {
+          activities.push({ date: c.createdAt?.slice(0, 10) || '', event: `Added certificate: ${c.issuer || 'Certificate'}` });
+        });
+        // Achievements
+        (Array.isArray(achievements) ? achievements : achievements.achievements || []).slice(0, 2).forEach((a: any) => {
+          activities.push({ date: a.createdAt?.slice(0, 10) || '', event: `Achievement: ${a.title}` });
+        });
+        // Messages
+        (Array.isArray(messages) ? messages : messages.messages || []).slice(0, 2).forEach((m: any) => {
+          activities.push({ date: m.createdAt?.slice(0, 10) || '', event: `New message from ${m.name}` });
+        });
+        // Sort by date desc
+        activities.sort((a, b) => (b.date > a.date ? 1 : -1));
+        setRecentActivity(activities.slice(0, 6));
+      } catch (err) {
+        // fallback: do nothing
+      }
+    }
+    if (activeSection === 'dashboard') fetchStatsAndActivity();
+  }, [activeSection]);
+
   // Resume upload state
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploadingResume, setUploadingResume] = useState(false);
@@ -219,21 +280,46 @@ export default function DashboardOverview() {
             <div className="space-y-6">
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statsData.map((stat) => {
-                  const Icon = stat.icon
-                  return (
-                    <Card key={stat.title} className="hover:shadow-md transition-shadow duration-200">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm text-muted-foreground font-display font-medium">{stat.title}</CardTitle>
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-display font-bold text-foreground">{stat.value}</div>
-                        <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
+                <Card className="hover:shadow-md transition-shadow duration-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm text-muted-foreground font-display font-medium">Total Projects</CardTitle>
+                    <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-display font-bold text-foreground">{stats.projects}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Dynamic</p>
+                  </CardContent>
+                </Card>
+                <Card className="hover:shadow-md transition-shadow duration-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm text-muted-foreground font-display font-medium">Certificates</CardTitle>
+                    <Award className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-display font-bold text-foreground">{stats.certificates}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Dynamic</p>
+                  </CardContent>
+                </Card>
+                <Card className="hover:shadow-md transition-shadow duration-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm text-muted-foreground font-display font-medium">Skills</CardTitle>
+                    <Code className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-display font-bold text-foreground">{stats.skills}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Dynamic</p>
+                  </CardContent>
+                </Card>
+                <Card className="hover:shadow-md transition-shadow duration-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm text-muted-foreground font-display font-medium">Messages</CardTitle>
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-display font-bold text-foreground">{stats.messages}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Dynamic</p>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Recent Activity */}

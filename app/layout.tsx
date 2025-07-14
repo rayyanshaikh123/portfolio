@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: 'Rayyan Shaikh',
   description: 'Created By Rayyan Shaikh',
   generator: 'Rayyan Shaikh',
+  icons: {
+    icon: '/steve.png',
+  },
 }
 
 export default function RootLayout({

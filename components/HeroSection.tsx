@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react'
 import Component from '../vercel-logo-particles'
 
 const floatingImages = [
-  { src: '/placeholder-logo.png', alt: 'Obj3', className: 'bottom-24 left-32 w-14 animate-float-fast' },
-  { src: '/placeholder-user.jpg', alt: 'Obj6', className: 'top-1/3 right-24 w-10 animate-float-fast' },
-  { src: '/placeholder-logo.png', alt: 'Obj7', className: 'bottom-1/4 left-40 w-12 animate-float-slow' },
+  { src: '/placeholder-logo.png', alt: 'Obj3', className: 'bottom-8 left-2 md:bottom-24 md:left-32 w-10 md:w-14 animate-float-fast' },
+  { src: '/placeholder-user.jpg', alt: 'Obj6', className: 'top-1/3 right-2 md:right-24 w-8 md:w-10 animate-float-fast' },
+  { src: '/placeholder-logo.png', alt: 'Obj7', className: 'bottom-12 left-4 md:bottom-1/4 md:left-40 w-8 md:w-12 animate-float-slow' },
 ]
 
 interface HeroSectionProps {
@@ -34,7 +34,7 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
   )
 
   return (
-    <section className={`relative w-full min-h-[80vh] md:h-dvh flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-black' : 'bg-white'} overflow-hidden`}>
+    <section className={`relative w-full min-h-screen md:h-dvh flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-black' : 'bg-white'}`} style={{ width: '100%' }}>
       {/* View Dashboard Floating Button (top right, only if admin) */}
       {showDashboard && (
         <a
@@ -77,7 +77,7 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
         href="https://eventify-blush.vercel.app/"
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-16 right-1/4 md:bottom-24 md:right-1/3 w-10 h-10 md:w-16 md:h-16 z-20 flex items-center justify-center animate-float-reverse hover:scale-110 transition"
+        className="absolute bottom-8 right-2 md:bottom-24 md:right-1/3 w-10 h-10 md:w-16 md:h-16 z-20 flex items-center justify-center animate-float-reverse hover:scale-110 transition"
         style={{ cursor: 'pointer' }}
         aria-label="Eventify"
         title="Eventify"
@@ -89,12 +89,12 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
         href="https://med-sync-nine.vercel.app/"
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-24 right-2 md:bottom-32 md:right-24 w-12 h-12 md:w-24 md:h-24 z-20 flex items-center justify-center animate-float-slow hover:scale-110 transition"
+        className="absolute bottom-20 right-2 md:bottom-32 md:right-24 w-10 h-10 md:w-24 md:h-24 z-20 flex items-center justify-center animate-float-slow hover:scale-110 transition"
         style={{ cursor: 'pointer' }}
         aria-label="MedSync"
         title="MedSync"
       >
-        <img src="/medsync.png" alt="MedSync" className="w-10 h-10 md:w-20 md:h-20 object-contain" />
+        <img src="/medsync.png" alt="MedSync" className="w-8 h-8 md:w-20 md:h-20 object-contain" />
       </a>
       {/* Grid Background - more visible */}
       <div className="absolute inset-0 z-0 pointer-events-none" style={{
@@ -136,8 +136,31 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
         />
       </span>
       {/* Particle Animation as the main centerpiece */}
-      <div className="w-full flex flex-col items-center justify-center max-w-screen px-2 md:px-0">
-        <Component theme={theme} />
+      <div className="w-full flex flex-col items-center justify-center" style={{ position: 'relative' }}>
+        <div style={{ width: '100%', position: 'relative' }}>
+          <Component theme={theme} />
+          {/* Scroll Down Icon at the bottom, floating and only on mobile */}
+          <button
+            onClick={() => {
+              const aboutSection = document.getElementById('about');
+              if (aboutSection) {
+                aboutSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            aria-label="Scroll to next section"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 w-max flex flex-col items-center animate-float-slow block md:hidden"
+            style={{
+              background: 'rgba(0,0,0,0.5)',
+              borderRadius: '9999px',
+              padding: '0.5rem',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="cyan" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+            <span className="text-xs text-cyan-400 mt-1">Scroll Down</span>
+          </button>
+        </div>
       </div>
       {/* Many Small Floating Images */}
       {updatedFloatingImages.map((img, i) => {

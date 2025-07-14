@@ -5,9 +5,9 @@ import React from 'react';
 import StartupLoader from "@/components/StartupLoader";
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'Rayyan Shaikh',
+  description: 'Created By Rayyan Shaikh',
+  generator: 'Rayyan Shaikh',
 }
 
 export default function RootLayout({

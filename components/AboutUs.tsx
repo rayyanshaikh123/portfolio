@@ -323,12 +323,12 @@ function CertificateSection({ theme }: { theme: 'dark' | 'light' }) {
                     </svg>
                   </div>
                   {/* Achievement image polaroid style, always fit and centered */}
-                  <div className={`w-full flex items-center justify-center rounded-xl border p-2 md:p-4 ${theme === 'dark' ? 'bg-zinc-900 border-zinc-700' : 'bg-zinc-100 border-zinc-200 shadow'}`} style={{ minHeight: 80 }}>
+                  <div className={`w-full flex items-center justify-center rounded-xl border overflow-hidden ${theme === 'dark' ? 'bg-zinc-900 border-zinc-700' : 'bg-zinc-100 border-zinc-200 shadow'}`} style={{ minHeight: 80 }}>
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="max-h-28 w-auto object-contain mx-auto"
-                      style={{ display: 'block', maxWidth: '100%' }}
+                      className="w-full h-auto max-h-48 object-contain rounded-lg"
+                      style={{ display: 'block' }}
                     />
                   </div>
                   {/* Title and description below image */}

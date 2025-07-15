@@ -59,6 +59,19 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
 
     let textImageData: ImageData | null = null
 
+    // Helper to wait for Orbitron font to load
+    const waitForFont = async () => {
+      try {
+        // Try to load the font at the size we use for canvas
+        const fontSize = isMobile ? 32 : 120
+        await document.fonts.load(`bold ${fontSize}px Orbitron`)
+        await document.fonts.ready
+      } catch (e) {
+        // Fallback: just wait a bit
+        await new Promise(res => setTimeout(res, 300))
+      }
+    }
+
     function createTextImage(callback?: () => void) {
       if (!ctx || !canvas) return 0
       ctx.save()
@@ -286,16 +299,23 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
     }
 
     // For image mode, wait for image to load before creating particles
-    if (type === 'image' && imageSrc) {
-      createTextImage(() => {
-        createInitialParticles(1)
-        animate(1)
-      })
-    } else {
-      const scale = createTextImage()
+    const startParticles = (scale: number) => {
       createInitialParticles(scale)
       animate(scale)
     }
+
+    const run = async () => {
+      if (type === 'image' && imageSrc) {
+        createTextImage(() => {
+          startParticles(1)
+        })
+      } else {
+        await waitForFont()
+        const scale = createTextImage()
+        startParticles(scale)
+      }
+    }
+    run()
 
     const handleResize = () => {
       if ((type === 'icon' || type === 'image') && size) {

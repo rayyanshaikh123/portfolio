@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import mongoose, { Schema, model, models } from 'mongoose'
+import { verifyToken, isAdmin } from '@/lib/auth';
 
 const MONGODB_URI = process.env.MONGODB_URI || ''
 
@@ -18,22 +19,32 @@ const ContentSchema = new Schema({
 const Content = models.Content || model('Content', ContentSchema)
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const auth = req.headers.get('authorization')
-  if (auth !== 'Bearer demo-admin-token') {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+  const auth = req.headers.get('authorization');
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   }
-  await dbConnect()
-  await Content.findByIdAndDelete(params.id)
-  return NextResponse.json({ success: true })
+  const token = auth.slice(7);
+  const payload = await verifyToken(token);
+  if (!isAdmin(payload)) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
+  await dbConnect();
+  await Content.findByIdAndDelete(params.id);
+  return NextResponse.json({ success: true });
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const auth = req.headers.get('authorization')
-  if (auth !== 'Bearer demo-admin-token') {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+  const auth = req.headers.get('authorization');
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   }
-  await dbConnect()
-  const data = await req.json()
-  const updated = await Content.findByIdAndUpdate(params.id, data, { new: true })
-  return NextResponse.json({ success: true, item: updated })
+  const token = auth.slice(7);
+  const payload = await verifyToken(token);
+  if (!isAdmin(payload)) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
+  await dbConnect();
+  const data = await req.json();
+  const updated = await Content.findByIdAndUpdate(params.id, data, { new: true });
+  return NextResponse.json({ success: true, item: updated });
 } 

@@ -18,12 +18,12 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
   // Admin dashboard button visibility
   const [showDashboard, setShowDashboard] = useState(false)
   useEffect(() => {
-    function checkToken() {
-      setShowDashboard(!!localStorage.getItem('adminToken'));
+    async function checkAdmin() {
+      const res = await fetch('/api/admin-login', { method: 'PUT', credentials: 'include' });
+      const data = await res.json();
+      setShowDashboard(!!(data.success && data.token));
     }
-    checkToken();
-    window.addEventListener('storage', checkToken);
-    return () => window.removeEventListener('storage', checkToken);
+    checkAdmin();
   }, []);
 
   // Replace the user icon with steve.png
@@ -110,35 +110,12 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
           ${theme === 'dark' ? 'bg-cyan-500 text-white' : 'bg-cyan-100 text-cyan-700'}`}
       >
         Portfolio
-        <button
-          aria-label="Admin Login"
-          onClick={() => {
-            const secret = window.prompt('Enter the secret:');
-            if (secret === 'kamlesh') {
-              localStorage.setItem('adminSecret', 'kamlesh');
-              window.location.href = '/admin-login';
-            }
-          }}
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: '100%',
-            height: '100%',
-            opacity: 0,
-            pointerEvents: 'auto',
-            border: 'none',
-            background: 'transparent',
-            cursor: 'pointer',
-            zIndex: 30,
-          }}
-          tabIndex={0}
-        />
+       
       </span>
       {/* Particle Animation as the main centerpiece */}
       <div className="w-full flex flex-col items-center justify-center" style={{ position: 'relative' }}>
         <div style={{ width: '100%', position: 'relative' }}>
-          <Component theme={theme} />
+        <Component theme={theme} />
           {/* Scroll Down Icon at the bottom, floating and only on mobile */}
           <button
             onClick={() => {

@@ -19,7 +19,7 @@ const sectionTitles = {
   contact: "Contact Messages",
 }
 
-export function TopNavbar({ activeSection }: TopNavbarProps) {
+export function TopNavbar({ activeSection, onLogout }: TopNavbarProps & { onLogout?: () => void }) {
   const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -39,9 +39,9 @@ export function TopNavbar({ activeSection }: TopNavbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-  function handleLogout() {
-    // Remove adminToken and redirect to portfolio
-    localStorage.removeItem('adminToken');
+  async function handleLogout() {
+    await fetch('/api/admin-login', { method: 'DELETE', credentials: 'include' });
+    if (onLogout) onLogout();
     window.location.href = '/';
   }
 

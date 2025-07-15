@@ -46,28 +46,21 @@ const recentActivity = [
 
 export default function DashboardOverview() {
   const router = useRouter();
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem("adminToken") : null;
-    if (!token) {
-      router.replace("/admin-login");
-    } else {
-      // Validate token with backend
-      fetch("/api/content", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then(res => {
-          if (!res.ok) {
-            localStorage.removeItem("adminToken");
-            router.replace("/admin-login");
-          }
-        })
-        .catch(() => {
-          localStorage.removeItem("adminToken");
-          router.replace("/admin-login");
-        });
+    // Only run on client
+    async function checkAuth() {
+      // Try to get a new access token using refresh cookie
+      const res = await fetch('/api/admin-login', { method: 'PUT', credentials: 'include' });
+      const data = await res.json();
+      if (data.success && data.token) {
+        setAccessToken(data.token);
+      } else {
+        setAccessToken(null);
+        router.replace('/admin-login');
+      }
     }
+    checkAuth();
   }, [router]);
   const [activeSection, setActiveSection] = useState('projects')
 
@@ -235,6 +228,20 @@ export default function DashboardOverview() {
     }
   };
 
+  // For all admin API requests, include the access token
+  const fetchWithAuth = async (url: string, options: any = {}) => {
+    if (!accessToken) throw new Error('Not authenticated');
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+    });
+  };
+
+  // Example usage in handleSubmit (for projects):
   const handleSubmit = async () => {
     const projectData = {
       title,
@@ -248,7 +255,7 @@ export default function DashboardOverview() {
       if (editingProject) {
         // Send PUT request to update project
         const id = editingProject._id || editingProject.id;
-        const res = await fetch(`/api/projects/${id}`, {
+        const res = await fetchWithAuth(`/api/projects/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(projectData),
@@ -258,7 +265,7 @@ export default function DashboardOverview() {
         await fetchProjects();
         return;
       } else {
-        const res = await fetch('/api/projects', {
+        const res = await fetchWithAuth('/api/projects', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(projectData),
@@ -273,10 +280,11 @@ export default function DashboardOverview() {
   };
   // --- ProjectsManagement logic end ---
 
-  const handleLogout = () => {
-    // Placeholder for logout logic
-    console.log("Logging out...");
-    // In a real app, you would clear session and redirect
+  // On logout, call DELETE /api/admin-login and clear access token
+  const handleLogout = async () => {
+    await fetch('/api/admin-login', { method: 'DELETE', credentials: 'include' });
+    setAccessToken(null);
+    router.replace('/admin-login');
   };
 
   const content = [
@@ -306,15 +314,15 @@ export default function DashboardOverview() {
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="hover:shadow-md transition-shadow duration-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm text-muted-foreground font-display font-medium">Total Projects</CardTitle>
                     <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
+                      </CardHeader>
+                      <CardContent>
                     <div className="text-2xl font-display font-bold text-foreground">{stats.projects}</div>
                     <p className="text-xs text-muted-foreground mt-1">Dynamic</p>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </Card>
                 <Card className="hover:shadow-md transition-shadow duration-200">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm text-muted-foreground font-display font-medium">Certificates</CardTitle>
@@ -495,35 +503,19 @@ export default function DashboardOverview() {
             </div>
           )}
           {activeSection === 'certificates' && (
-            <CertificatesManagement />
+            <CertificatesManagement fetchWithAuth={fetchWithAuth} accessToken={accessToken} />
           )}
           {activeSection === 'achievements' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-foreground">My Achievements</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {achievements.map((achievement, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow duration-200">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm text-muted-foreground font-display font-medium">{achievement.title}</CardTitle>
-                      <Award className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-foreground">{achievement.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{achievement.date}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            <AchievementsManagement fetchWithAuth={fetchWithAuth} accessToken={accessToken} />
           )}
           {activeSection === 'timeline' && (
-            <TimelineManagement />
+            <TimelineManagement fetchWithAuth={fetchWithAuth} accessToken={accessToken} />
           )}
           {activeSection === 'skills' && (
-            <SkillsManagement />
+            <SkillsManagement fetchWithAuth={fetchWithAuth} accessToken={accessToken} />
           )}
           {activeSection === 'contact' && (
-            <ContactMessages />
+            <ContactMessages fetchWithAuth={fetchWithAuth} accessToken={accessToken} />
           )}
           {/* Add more sections here as needed, e.g. certificates, timeline, skills, contact */}
         </main>
@@ -532,7 +524,7 @@ export default function DashboardOverview() {
   )
 }
 
-export function CertificatesManagement() {
+export function CertificatesManagement({ fetchWithAuth, accessToken }: { fetchWithAuth: (url: string, options?: any) => Promise<Response>; accessToken: string | null }) {
   // Remove mockCertificates and mockAchievements
   const [certificates, setCertificates] = useState<any[]>([]);
   const [achievements, setAchievements] = useState<any[]>([]);
@@ -550,7 +542,7 @@ export function CertificatesManagement() {
   // Fetch certificates from API
   const fetchCertificates = async () => {
     try {
-      const res = await fetch('/api/certificates');
+      const res = await fetchWithAuth('/api/certificates');
       if (!res.ok) throw new Error('Failed to fetch certificates');
       const data = await res.json();
       setCertificates(Array.isArray(data) ? data : data.certificates || []);
@@ -561,7 +553,7 @@ export function CertificatesManagement() {
   // Fetch achievements from API
   const fetchAchievements = async () => {
     try {
-      const res = await fetch('/api/achievements');
+      const res = await fetchWithAuth('/api/achievements');
       if (!res.ok) throw new Error('Failed to fetch achievements');
       const data = await res.json();
       setAchievements(Array.isArray(data) ? data : data.achievements || []);
@@ -617,11 +609,11 @@ export function CertificatesManagement() {
   const handleDelete = async (id: string, type: 'certificate' | 'achievement') => {
     try {
       if (type === 'certificate') {
-        const res = await fetch(`/api/certificates/${id}`, { method: 'DELETE' });
+        const res = await fetchWithAuth(`/api/certificates/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('Failed to delete certificate');
         await fetchCertificates();
       } else {
-        const res = await fetch(`/api/achievements/${id}`, { method: 'DELETE' });
+        const res = await fetchWithAuth(`/api/achievements/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('Failed to delete achievement');
         await fetchAchievements();
       }
@@ -641,7 +633,7 @@ export function CertificatesManagement() {
       try {
         if (editingItem && editingItem._id) {
           // Update
-          const res = await fetch(`/api/certificates/${editingItem._id}`, {
+          const res = await fetchWithAuth(`/api/certificates/${editingItem._id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(certData),
@@ -649,7 +641,7 @@ export function CertificatesManagement() {
           if (!res.ok) throw new Error('Failed to update certificate');
         } else {
           // Add
-          const res = await fetch('/api/certificates', {
+          const res = await fetchWithAuth('/api/certificates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(certData),
@@ -671,7 +663,7 @@ export function CertificatesManagement() {
       try {
         if (editingItem && editingItem._id) {
           // Update
-          const res = await fetch(`/api/achievements/${editingItem._id}`, {
+          const res = await fetchWithAuth(`/api/achievements/${editingItem._id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(achData),
@@ -679,7 +671,7 @@ export function CertificatesManagement() {
           if (!res.ok) throw new Error('Failed to update achievement');
         } else {
           // Add
-          const res = await fetch('/api/achievements', {
+          const res = await fetchWithAuth('/api/achievements', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(achData),
@@ -854,7 +846,43 @@ export function CertificatesManagement() {
   );
 }
 
-export function TimelineManagement() {
+export function AchievementsManagement({ fetchWithAuth, accessToken }: { fetchWithAuth: (url: string, options?: any) => Promise<Response>; accessToken: string | null }) {
+  const [achievements, setAchievements] = useState<any[]>([]);
+  useEffect(() => {
+    async function fetchAchievements() {
+      try {
+        const res = await fetchWithAuth('/api/achievements');
+        if (!res.ok) throw new Error('Failed to fetch achievements');
+        const data = await res.json();
+        setAchievements(Array.isArray(data) ? data : data.achievements || []);
+      } catch (err) {
+        setAchievements([]);
+      }
+    }
+    fetchAchievements();
+  }, [fetchWithAuth]);
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-foreground">My Achievements</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {achievements.map((achievement, index) => (
+          <Card key={index} className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm text-muted-foreground font-display font-medium">{achievement.title}</CardTitle>
+              <Award className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground">{achievement.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">{achievement.date}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function TimelineManagement({ fetchWithAuth, accessToken }: { fetchWithAuth: (url: string, options?: any) => Promise<Response>; accessToken: string | null }) {
   const [timeline, setTimeline] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<any>(null);
@@ -888,7 +916,7 @@ export function TimelineManagement() {
   // Fetch timeline entries from API
   const fetchTimeline = async () => {
     try {
-      const res = await fetch('/api/timeline');
+      const res = await fetchWithAuth('/api/timeline');
       if (!res.ok) throw new Error('Failed to fetch timeline');
       const data = await res.json();
       setTimeline(Array.isArray(data) ? data : data.timeline || []);
@@ -921,7 +949,7 @@ export function TimelineManagement() {
 
   const handleDeleteEntry = async (id: string) => {
     try {
-      const res = await fetch(`/api/timeline/${id}`, { method: 'DELETE' });
+      const res = await fetchWithAuth(`/api/timeline/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete timeline entry');
       await fetchTimeline();
     } catch (err) {
@@ -939,7 +967,7 @@ export function TimelineManagement() {
     try {
       if (editingEntry && editingEntry._id) {
         // Update
-        const res = await fetch(`/api/timeline/${editingEntry._id}`, {
+        const res = await fetchWithAuth(`/api/timeline/${editingEntry._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(entryData),
@@ -947,7 +975,7 @@ export function TimelineManagement() {
         if (!res.ok) throw new Error('Failed to update timeline entry');
       } else {
         // Add
-        const res = await fetch('/api/timeline', {
+        const res = await fetchWithAuth('/api/timeline', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(entryData),
@@ -1072,7 +1100,7 @@ export function TimelineManagement() {
   );
 }
 
-export function SkillsManagement() {
+export function SkillsManagement({ fetchWithAuth, accessToken }: { fetchWithAuth: (url: string, options?: any) => Promise<Response>; accessToken: string | null }) {
   const [skills, setSkills] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<any>(null);
@@ -1081,7 +1109,7 @@ export function SkillsManagement() {
   // Fetch skills from API
   const fetchSkills = async () => {
     try {
-      const res = await fetch('/api/skills');
+      const res = await fetchWithAuth('/api/skills');
       let data = await res.json();
       data = Array.isArray(data) ? data : data.skills || [];
       setSkills(data);
@@ -1108,7 +1136,7 @@ export function SkillsManagement() {
 
   const handleDeleteSkill = async (id: string) => {
     try {
-      const res = await fetch(`/api/skills/${id}`, { method: 'DELETE' });
+      const res = await fetchWithAuth(`/api/skills/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete skill');
       await fetchSkills();
     } catch (e) {
@@ -1120,7 +1148,7 @@ export function SkillsManagement() {
     try {
       if (editingSkill && editingSkill._id) {
         // Update
-        const res = await fetch(`/api/skills/${editingSkill._id}`, {
+        const res = await fetchWithAuth(`/api/skills/${editingSkill._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name }),
@@ -1128,7 +1156,7 @@ export function SkillsManagement() {
         if (!res.ok) throw new Error('Failed to update skill');
       } else {
         // Add
-        const res = await fetch('/api/skills', {
+        const res = await fetchWithAuth('/api/skills', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name }),
@@ -1205,7 +1233,7 @@ export function SkillsManagement() {
   );
 }
 
-export function ContactMessages() {
+export function ContactMessages({ fetchWithAuth, accessToken }: { fetchWithAuth: (url: string, options?: any) => Promise<Response>; accessToken: string | null }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -1214,7 +1242,7 @@ export function ContactMessages() {
   useEffect(() => {
     async function fetchMessages() {
       try {
-        const res = await fetch('/api/contact');
+        const res = await fetchWithAuth('/api/contact');
         let data = await res.json();
         data = Array.isArray(data) ? data : data.messages || [];
         setMessages(data);
@@ -1233,7 +1261,7 @@ export function ContactMessages() {
 
   const handleDeleteMessage = async (id: string) => {
     try {
-      const res = await fetch(`/api/contact/${id}`, { method: 'DELETE' });
+      const res = await fetchWithAuth(`/api/contact/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete message');
       setMessages(messages.filter((m: any) => m._id !== id));
     } catch (e) {

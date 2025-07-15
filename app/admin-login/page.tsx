@@ -1,14 +1,31 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function AdminLogin() {
+const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET;
+
+export default function AdminLoginPage() {
+  const [authorized, setAuthorized] = useState(false);
+  const router = useRouter();
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Only run on client
+    if (typeof window !== 'undefined') {
+      const input = window.prompt('Enter the secret:');
+      if (input && input === ADMIN_SECRET) {
+        setAuthorized(true);
+      } else {
+        router.replace('/');
+      }
+    }
+  }, [router]);
+
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [theme, setTheme] = useState<'dark' | 'light'>(typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
   const [showPassword, setShowPassword] = useState(false)
-  const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -22,13 +39,14 @@ export default function AdminLogin() {
     const res = await fetch('/api/admin-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: JSON.stringify(form),
+      credentials: 'include', // important for cookies
     })
     const data = await res.json()
     if (data.success) {
       setSuccess(true)
       setError('')
-      localStorage.setItem('adminToken', data.token)
+      setAccessToken(data.token)
       router.push('/admin/dashboard')
     } else {
       setError(data.message || 'Invalid username or password')
@@ -36,6 +54,7 @@ export default function AdminLogin() {
     }
   }
 
+  if (!authorized) return null;
   return (
     <div className={`min-h-screen flex items-center justify-center`} style={{ background: theme === 'dark' ? '#000' : '#fff', color: theme === 'dark' ? '#fff' : '#000', fontFamily: 'Orbitron, Arial, sans-serif' }}>
       <div className="w-full max-w-md rounded-2xl shadow-2xl p-8" style={{ background: theme === 'dark' ? '#18181b' : '#fff' }}>

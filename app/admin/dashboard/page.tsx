@@ -15,6 +15,7 @@ import { Plus, Edit, Trash2 } from "lucide-react"
 import { TopNavbar } from "@/components/TopNavbar";
 import React from "react"; // Added missing import
 import { useRef } from 'react';
+import { useRouter } from "next/navigation";
 
 // Define Project type
 interface Project {
@@ -44,6 +45,30 @@ const recentActivity = [
 ]
 
 export default function DashboardOverview() {
+  const router = useRouter();
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("adminToken") : null;
+    if (!token) {
+      router.replace("/admin-login");
+    } else {
+      // Validate token with backend
+      fetch("/api/content", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(res => {
+          if (!res.ok) {
+            localStorage.removeItem("adminToken");
+            router.replace("/admin-login");
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem("adminToken");
+          router.replace("/admin-login");
+        });
+    }
+  }, [router]);
   const [activeSection, setActiveSection] = useState('projects')
 
   // Dynamic stats state

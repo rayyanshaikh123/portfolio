@@ -132,7 +132,7 @@ export default function DashboardOverview() {
   const [resumeUploadSuccess, setResumeUploadSuccess] = useState(false);
 
   const handleResumeUpload = async () => {
-    if (!resumeFile) return;
+    if (!resumeFile || !accessToken) return;
     setUploadingResume(true);
     setResumeUploadMsg(null);
     setResumeUploadSuccess(false);
@@ -142,6 +142,9 @@ export default function DashboardOverview() {
       const res = await fetch('/api/admin-upload-resume', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
       });
       if (!res.ok) {
         const data = await res.json();

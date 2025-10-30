@@ -646,8 +646,9 @@ export default function AboutUs({ theme }: AboutUsProps) {
       <ProjectSection theme={theme} />
       <CertificateSection theme={theme} />
       <TimelineSection theme={theme} />
+
       <HireMeSection theme={theme} />
       <FooterSection theme={theme} />
     </>
   )
-} 
+}

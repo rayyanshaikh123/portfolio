@@ -72,29 +72,29 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
           className="w-6 h-6 md:w-8 md:h-8 object-contain"
         />
       </a>
-      {/* Eventify Floating Icon (bottom right) */}
+      {/* ECELL Floating Icon (bottom right) */}
       <a
-        href="https://eventify-blush.vercel.app/"
+        href=""
         target="_blank"
         rel="noopener noreferrer"
         className="absolute bottom-8 right-2 md:bottom-24 md:right-1/3 w-10 h-10 md:w-16 md:h-16 z-20 flex items-center justify-center animate-float-reverse hover:scale-110 transition"
         style={{ cursor: 'pointer' }}
         aria-label="Eventify"
-        title="Eventify"
+        title="ECELL"
       >
-        <img src="/eventify.png" alt="Eventify" className="w-8 h-8 md:w-14 md:h-14 object-contain" />
+        <img src="/ecell.jpg" alt="ECELL" className="w-8 h-8 md:w-14 md:h-14 object-contain" />
       </a>
-      {/* MedSync Floating Icon (bottom right) */}
+      {/* Techshala Floating Icon (bottom right) */}
       <a
-        href="https://med-sync-nine.vercel.app/"
+        href="https://techshala.vpt.edu.in/"
         target="_blank"
         rel="noopener noreferrer"
         className="absolute bottom-20 right-2 md:bottom-32 md:right-24 w-10 h-10 md:w-24 md:h-24 z-20 flex items-center justify-center animate-float-slow hover:scale-110 transition"
         style={{ cursor: 'pointer' }}
-        aria-label="MedSync"
-        title="MedSync"
+        aria-label="Techshala"
+        title="Techshala"
       >
-        <img src="/medsync.png" alt="MedSync" className="w-8 h-8 md:w-20 md:h-20 object-contain" />
+        <img src="/Techshala.png" alt="Techshala" className="w-8 h-8 md:w-20 md:h-20 object-contain" />
       </a>
       {/* Grid Background - more visible */}
       <div className="absolute inset-0 z-0 pointer-events-none" style={{

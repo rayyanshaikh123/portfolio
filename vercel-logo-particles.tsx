@@ -156,7 +156,7 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
               baseY: y,
               size: Math.random() * 1 + 0.5,
               color: theme === 'dark' ? 'white' : 'black',
-              scatteredColor: type === 'text' ? 'red' : (theme === 'dark' ? 'white' : 'black'),
+              scatteredColor: type === 'text' ? 'cyan' : (theme === 'dark' ? 'white' : 'black'),
               isAWS: false,
               life: Math.random() * 100 + 50
             }

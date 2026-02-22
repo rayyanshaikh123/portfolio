@@ -223,7 +223,7 @@ export default function DashboardOverview() {
 
   const handleDeleteProject = async (id: string | number) => {
     try {
-      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      const res = await fetchWithAuth(`/api/projects/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete project');
       await fetchProjects();
     } catch (err) {

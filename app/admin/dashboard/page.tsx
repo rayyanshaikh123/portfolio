@@ -541,6 +541,9 @@ export function CertificatesManagement({ fetchWithAuth, accessToken }: { fetchWi
   // Achievement fields
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalImage, setModalImage] = useState<string | null>(null);
 
   // Fetch certificates from API
   const fetchCertificates = async () => {
@@ -762,6 +765,28 @@ export function CertificatesManagement({ fetchWithAuth, accessToken }: { fetchWi
           </DialogContent>
         </Dialog>
       </div>
+      {/* Modal for viewing certificate image */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
+          onClick={() => { setModalOpen(false); setModalImage(null); }}
+        >
+          <div className="relative max-w-4xl w-full flex flex-col items-center px-4" onClick={e => e.stopPropagation()}>
+            <button
+              className="absolute top-2 right-2 text-white text-3xl font-bold bg-black bg-opacity-50 rounded-full px-3 py-1 hover:bg-opacity-80 z-10"
+              onClick={() => { setModalOpen(false); setModalImage(null); }}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <img
+              src={modalImage || ''}
+              alt="Certificate Large View"
+              className="w-full max-h-[85vh] object-contain rounded-lg shadow-2xl border-4 border-white dark:border-zinc-700"
+            />
+          </div>
+        </div>
+      )}
       {/* Certificates List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {certificates.map((certificate: any) => (
@@ -793,15 +818,28 @@ export function CertificatesManagement({ fetchWithAuth, accessToken }: { fetchWi
               {certificate.image && (
                 <img src={certificate.image} alt={certificate.issuer || 'Certificate'} className="rounded-lg max-h-32 border mb-2" />
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full bg-transparent"
-                onClick={() => window.open(certificate.link, "_blank")}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View Certificate
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 bg-transparent"
+                  onClick={() => { setModalImage(certificate.image); setModalOpen(true); }}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Image
+                </Button>
+                {certificate.link && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 bg-transparent"
+                    onClick={() => window.open(certificate.link, "_blank")}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Verify
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}

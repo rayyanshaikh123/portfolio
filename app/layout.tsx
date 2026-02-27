@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from "@/components/theme-provider"
-import React from 'react';
-import StartupLoader from "@/components/StartupLoader";
+import { jetbrainsMono, poppins } from '@/lib/fonts'
+import React from 'react'
+import StartupLoader from "@/components/StartupLoader"
 
 export const metadata: Metadata = {
   title: 'Rayyan Shaikh',
@@ -19,10 +20,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
+    <html lang="en" suppressHydrationWarning
+      className={`${jetbrainsMono.variable} ${poppins.variable}`}>
+      <body className="font-body">
         <StartupLoader />
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           {children}
         </ThemeProvider>
       </body>

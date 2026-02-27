@@ -1,4 +1,7 @@
+"use client"
 import React, { useEffect, useState } from 'react'
+import { useTheme } from 'next-themes'
+import { Moon, Sun } from 'lucide-react'
 import Component from '../vercel-logo-particles'
 
 const floatingImages = [
@@ -7,45 +10,75 @@ const floatingImages = [
   { src: '/placeholder-logo.png', alt: 'Obj7', className: 'bottom-12 left-4 md:bottom-1/4 md:left-40 w-8 md:w-12 animate-float-slow' },
 ]
 
-interface HeroSectionProps {
-  theme: 'dark' | 'light'
-  setTheme: (t: 'dark' | 'light') => void
-}
+const colorPresets = [
+  { name: 'Purple', hue: 263 },
+  { name: 'Blue', hue: 217 },
+  { name: 'Cyan', hue: 180 },
+  { name: 'Green', hue: 142 },
+  { name: 'Orange', hue: 25 },
+  { name: 'Pink', hue: 330 },
+  { name: 'Red', hue: 0 },
+]
 
-export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
+export default function HeroSection() {
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  const [colorIndex, setColorIndex] = useState(0)
+
+  useEffect(() => {
+    setMounted(true)
+    const saved = localStorage.getItem('accent-color-index')
+    if (saved) {
+      const idx = parseInt(saved, 10)
+      if (!isNaN(idx) && idx >= 0 && idx < colorPresets.length) {
+        setColorIndex(idx)
+        document.documentElement.style.setProperty('--accent-hue', String(colorPresets[idx].hue))
+      }
+    }
+  }, [])
+
+  const cycleColor = () => {
+    const next = (colorIndex + 1) % colorPresets.length
+    setColorIndex(next)
+    document.documentElement.style.setProperty('--accent-hue', String(colorPresets[next].hue))
+    localStorage.setItem('accent-color-index', String(next))
+  }
+
   const handleToggle = () => setTheme(theme === 'dark' ? 'light' : 'dark')
 
   // Admin dashboard button visibility
   const [showDashboard, setShowDashboard] = useState(false)
   useEffect(() => {
     async function checkAdmin() {
-      const res = await fetch('/api/admin-login', { method: 'PUT', credentials: 'include' });
-      const data = await res.json();
-      setShowDashboard(!!(data.success && data.token));
+      const res = await fetch('/api/admin-login', { method: 'PUT', credentials: 'include' })
+      const data = await res.json()
+      setShowDashboard(!!(data.success && data.token))
     }
-    checkAdmin();
-  }, []);
+    checkAdmin()
+  }, [])
 
-  // Replace the user icon with steve.png
   const updatedFloatingImages = floatingImages.map(img =>
     img.alt === 'Obj6'
       ? { ...img, src: '/steve.png', alt: 'Steve' }
       : img
   )
 
+  const currentTheme = mounted ? (theme as 'dark' | 'light') : 'dark'
+  const isDark = currentTheme === 'dark'
+
   return (
-    <section className={`relative w-full min-h-screen md:h-dvh flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-black' : 'bg-white'}`} style={{ width: '100%' }}>
+    <section className="relative w-full min-h-screen md:h-dvh flex flex-col items-center justify-center bg-background" style={{ width: '100%' }}>
       {/* View Dashboard Floating Button (top right, only if admin) */}
       {showDashboard && (
         <a
           href="/admin/dashboard"
-          className="absolute top-2 right-2 md:top-8 md:right-8 z-30 px-3 md:px-5 py-1.5 md:py-2 rounded-lg bg-cyan-600 text-white font-bold shadow-lg hover:bg-cyan-700 transition text-xs md:text-base"
+          className="absolute top-2 right-2 md:top-8 md:right-8 z-30 px-3 md:px-5 py-1.5 md:py-2 rounded-lg bg-electric-500 text-white font-bold shadow-lg hover:bg-electric-600 transition text-xs md:text-base font-heading"
           style={{ textDecoration: 'none' }}
         >
           View Dashboard
         </a>
       )}
-      {/* Download Resume Floating Icon (replaces first floating image) */}
+      {/* Download Resume Floating Icon */}
       <a
         href="/resume.pdf"
         download
@@ -54,25 +87,25 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
         aria-label="Download Resume"
         title="Download Resume"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke={theme === 'dark' ? '#fff' : '#000'}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4m-9 8h10" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-foreground"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4m-9 8h10" /></svg>
       </a>
-      {/* CodePen Floating Icon (bottom left) */}
+      {/* CodePen Floating Icon */}
       <a
         href="https://codepen.io/rayyan_shk70"
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute left-2 top-1/2 md:left-16 md:top-1/2 w-8 h-8 md:w-12 md:h-12 rounded-xl z-20 flex items-center justify-center animate-float-reverse hover:scale-110 transition text-xl md:text-3xl "
+        className="absolute left-2 top-1/2 md:left-16 md:top-1/2 w-8 h-8 md:w-12 md:h-12 rounded-xl z-20 flex items-center justify-center animate-float-reverse hover:scale-110 transition text-xl md:text-3xl"
         style={{ cursor: 'pointer', transform: 'translateY(-50%)' }}
         aria-label="CodePen Profile"
         title="CodePen Profile"
       >
         <img
-          src={theme === 'dark' ? '/codepen.png' : '/codepen-light.png'}
+          src={isDark ? '/codepen.png' : '/codepen-light.png'}
           alt="CodePen"
           className="w-6 h-6 md:w-8 md:h-8 object-contain"
         />
       </a>
-      {/* ECELL Floating Icon (bottom right) */}
+      {/* ECELL Floating Icon */}
       <a
         href=""
         target="_blank"
@@ -84,7 +117,7 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
       >
         <img src="/ecell.jpg" alt="ECELL" className="w-8 h-8 md:w-14 md:h-14 object-contain" />
       </a>
-      {/* Techshala Floating Icon (bottom right) */}
+      {/* Techshala Floating Icon */}
       <a
         href="https://techshala.vpt.edu.in/"
         target="_blank"
@@ -96,32 +129,36 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
       >
         <img src="/Techshala.png" alt="Techshala" className="w-8 h-8 md:w-20 md:h-20 object-contain" />
       </a>
-      {/* Grid Background - more visible */}
+      {/* Grid Background */}
       <div className="absolute inset-0 z-0 pointer-events-none" style={{
         backgroundImage:
-          theme === 'dark'
-            ? 'linear-gradient(rgba(255,255,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.10) 1px, transparent 1px)'
-            : 'linear-gradient(rgba(0,0,0,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.10) 1px, transparent 1px)',
+          isDark
+            ? 'linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)'
+            : 'linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px)',
         backgroundSize: '32px 32px',
       }} />
-      {/* Small tag at the very top center, theme-aware */}
-      <span
-        className={`absolute left-1/2 top-2 md:top-8 -translate-x-1/2 z-20 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-semibold shadow-lg tracking-widest uppercase select-none pointer-events-none
-          ${theme === 'dark' ? 'bg-cyan-500 text-white' : 'bg-cyan-100 text-cyan-700'}`}
+      {/* Subtle accent radial glow */}
+      <div className="absolute inset-0 z-0 pointer-events-none" style={{
+        background: `radial-gradient(circle at 50% 50%, hsl(var(--accent-hue, 263) 70% 61% / 0.04) 0%, transparent 70%)`,
+      }} />
+      {/* Clickable color-cycling Portfolio tag */}
+      <button
+        onClick={cycleColor}
+        className="absolute left-1/2 top-2 md:top-8 -translate-x-1/2 z-20 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-semibold shadow-lg tracking-widest uppercase select-none bg-electric-500 text-white font-heading hover:scale-105 active:scale-95 transition-all cursor-pointer border-none glow-purple"
+        title={`Theme: ${colorPresets[colorIndex].name} — Click to change`}
       >
         Portfolio
-       
-      </span>
+      </button>
       {/* Particle Animation as the main centerpiece */}
       <div className="w-full flex flex-col items-center justify-center" style={{ position: 'relative' }}>
         <div style={{ width: '100%', position: 'relative' }}>
-        <Component theme={theme} />
-          {/* Scroll Down Icon at the bottom, floating and only on mobile */}
+          <Component theme={currentTheme} />
+          {/* Scroll Down Icon (mobile only) */}
           <button
             onClick={() => {
-              const aboutSection = document.getElementById('about');
+              const aboutSection = document.getElementById('about')
               if (aboutSection) {
-                aboutSection.scrollIntoView({ behavior: 'smooth' });
+                aboutSection.scrollIntoView({ behavior: 'smooth' })
               }
             }}
             aria-label="Scroll to next section"
@@ -134,12 +171,12 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
               cursor: 'pointer',
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="cyan" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-            <span className="text-xs text-cyan-400 mt-1">Scroll Down</span>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-electric-500"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+            <span className="text-xs text-electric-400 mt-1 font-heading">Scroll Down</span>
           </button>
         </div>
       </div>
-      {/* Many Small Floating Images */}
+      {/* Floating Images */}
       {updatedFloatingImages.map((img, i) => {
         if (img.alt === 'Steve') {
           return (
@@ -150,9 +187,9 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
               className={`floating-corner absolute shadow-2xl z-10 ${img.className}`}
               style={{ cursor: 'pointer', maxWidth: '14vw', minWidth: 28, maxHeight: '14vw', minHeight: 28 }}
               onClick={() => {
-                const aboutSection = document.getElementById('about');
+                const aboutSection = document.getElementById('about')
                 if (aboutSection) {
-                  aboutSection.scrollIntoView({ behavior: 'smooth' });
+                  aboutSection.scrollIntoView({ behavior: 'smooth' })
                 }
               }}
             />
@@ -163,19 +200,19 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
             key={i}
             src={img.src}
             alt={img.alt}
-            className={`floating-corner absolute${img.alt === 'Steve' ? '' : ' rounded-xl'} shadow-2xl z-10 dark:invert ${img.className}`}
+            className={`floating-corner absolute rounded-xl shadow-2xl z-10 dark:invert ${img.className}`}
             style={{ maxWidth: '14vw', minWidth: 28, maxHeight: '14vw', minHeight: 28 }}
           />
         )
       })}
-      {/* Light/Dark Toggle as a floating object (top right) with emoji, transparent background */}
+      {/* Light/Dark Toggle */}
       <button
         aria-label="Toggle light/dark mode"
         onClick={handleToggle}
-        className="absolute top-12 right-2 md:top-24 md:right-24 w-8 h-8 md:w-14 md:h-14 rounded-xl z-20 flex items-center justify-center animate-float-fast hover:scale-110 transition text-xl md:text-3xl border-none bg-transparent shadow-none"
+        className="absolute top-12 right-2 md:top-24 md:right-24 w-8 h-8 md:w-14 md:h-14 rounded-xl z-20 flex items-center justify-center animate-float-fast hover:scale-110 transition text-xl md:text-3xl border-none bg-transparent shadow-none text-foreground"
         style={{ cursor: 'pointer', background: 'transparent' }}
       >
-        {theme === 'dark' ? '☀️' : '🌙'}
+        {mounted && (isDark ? <Sun size={24} /> : <Moon size={24} />)}
       </button>
       <style jsx>{`
         @keyframes float-slow {
@@ -205,4 +242,4 @@ export default function HeroSection({ theme, setTheme }: HeroSectionProps) {
       `}</style>
     </section>
   )
-} 
+}

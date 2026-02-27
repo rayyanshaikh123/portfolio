@@ -12,7 +12,24 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			heading: ['var(--font-heading)', 'JetBrains Mono', 'monospace'],
+  			body: ['var(--font-body)', 'Poppins', 'sans-serif'],
+  		},
   		colors: {
+  			electric: {
+  				DEFAULT: 'hsl(var(--electric-500))',
+  				50: 'hsl(var(--electric-50))',
+  				100: 'hsl(var(--electric-100))',
+  				200: 'hsl(var(--electric-200))',
+  				300: 'hsl(var(--electric-300))',
+  				400: 'hsl(var(--electric-400))',
+  				500: 'hsl(var(--electric-500))',
+  				600: 'hsl(var(--electric-600))',
+  				700: 'hsl(var(--electric-700))',
+  				800: 'hsl(var(--electric-800))',
+  				900: 'hsl(var(--electric-900))',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

@@ -1,15 +1,28 @@
 "use client"
-
-import React, { useState } from "react"
 import HeroSection from "../components/HeroSection"
-import AboutUs from "../components/AboutUs"
+import AboutSection from "../components/sections/AboutSection"
+import ProjectSection from "../components/sections/ProjectSection"
+import CertificateSection from "../components/sections/CertificateSection"
+import TimelineSection from "../components/sections/TimelineSection"
+import HireMeSection from "../components/sections/HireMeSection"
+import FooterSection from "../components/sections/FooterSection"
+import dynamic from 'next/dynamic'
 
-export default function SyntheticV0PageForDeployment() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+const ChatWidget = dynamic(() => import('../components/ChatWidget'), { ssr: false })
+const ScrollProgress = dynamic(() => import('../components/ScrollProgress'), { ssr: false })
+
+export default function Home() {
   return (
-    <>
-      <HeroSection theme={theme} setTheme={setTheme} />
-      <AboutUs theme={theme} />
-    </>
+    <main>
+      <ScrollProgress />
+      <HeroSection />
+      <AboutSection />
+      <ProjectSection />
+      <CertificateSection />
+      <TimelineSection />
+      <HireMeSection />
+      <FooterSection />
+      <ChatWidget />
+    </main>
   )
 }

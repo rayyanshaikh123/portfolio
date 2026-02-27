@@ -60,7 +60,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md rounded-2xl shadow-2xl p-8" style={{ background: theme === 'dark' ? '#18181b' : '#fff' }}>
         <h1 className="text-3xl md:text-4xl font-extrabold font-inter tracking-tight mb-8 text-center" style={{ color: theme === 'dark' ? '#fff' : '#111' }}>Admin Login</h1>
         {success ? (
-          <div className="text-center text-cyan-600 dark:text-cyan-400 text-lg font-semibold py-12">Login successful! Welcome, admin.</div>
+          <div className="text-center text-electric-500 dark:text-electric-400 text-lg font-semibold py-12">Login successful! Welcome, admin.</div>
         ) : (
           <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
             <div>
@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 rounded-lg border font-inter focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className="w-full px-4 py-2 rounded-lg border font-inter focus:outline-none focus:ring-2 focus:ring-electric-500"
                 style={{
                   borderColor: theme === 'dark' ? '#3f3f46' : '#d4d4d8',
                   backgroundColor: theme === 'dark' ? '#27272a' : '#f4f4f5',
@@ -89,7 +89,7 @@ export default function AdminLoginPage() {
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 rounded-lg border font-inter focus:outline-none focus:ring-2 focus:ring-cyan-400 pr-10"
+                className="w-full px-4 py-2 rounded-lg border font-inter focus:outline-none focus:ring-2 focus:ring-electric-500 pr-10"
                 style={{
                   borderColor: theme === 'dark' ? '#3f3f46' : '#d4d4d8',
                   backgroundColor: theme === 'dark' ? '#27272a' : '#f4f4f5',
@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(v => !v)}
-                className="absolute right-2 top-9 -translate-y-1/2 text-zinc-400 hover:text-cyan-600"
+                className="absolute right-2 top-9 -translate-y-1/2 text-zinc-400 hover:text-electric-500"
                 tabIndex={-1}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
@@ -115,7 +115,7 @@ export default function AdminLoginPage() {
             {error && <div className="text-red-500 text-sm text-center font-semibold" style={{ color: theme === 'dark' ? '#f87171' : '#dc2626' }}>{error}</div>}
             <button
               type="submit"
-              className="mt-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-8 rounded-full text-base shadow-lg transition font-inter"
+              className="mt-2 bg-electric-500 hover:bg-electric-600 text-white font-bold py-3 px-8 rounded-full text-base shadow-lg transition font-inter"
             >
               Login
             </button>

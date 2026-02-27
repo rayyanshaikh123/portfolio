@@ -127,21 +127,22 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
           const avg = (r + g + b) / 3
           if (a > 128 && avg < 250) { // allow more detail
             if (theme === 'light') {
-              r = Math.min(Math.round(r * 0.8), 170)
-              g = Math.min(Math.round(g * 0.8), 170)
-              b = Math.min(Math.round(b * 0.8), 170)
-              // Only force dark if all channels are still very light
-              if (r > 160 && g > 160 && b > 160) {
-                r = 30; g = 30; b = 30;
+              r = Math.min(Math.round(r * 0.6), 120)
+              g = Math.min(Math.round(g * 0.6), 120)
+              b = Math.min(Math.round(b * 0.6), 120)
+              // Force dark if channels are still light
+              if (r > 100 && g > 100 && b > 100) {
+                r = 20; g = 20; b = 20;
               }
             }
+            const pSize = theme === 'light' ? Math.random() * 1.5 + 1.0 : Math.random() * 1 + 0.5
             return {
               x: x,
               y: y,
               baseX: x,
               baseY: y,
-              size: Math.random() * 1 + 0.5,
-              color: `rgba(${r},${g},${b},${a/255})`,
+              size: pSize,
+              color: `rgba(${r},${g},${b},${Math.max(a/255, theme === 'light' ? 0.85 : 0)})`,
               scatteredColor: `red`,
               isAWS: false,
               life: Math.random() * 100 + 50
@@ -149,14 +150,15 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
           }
         } else {
           if (data[idx + 3] > 128) {
+            const pSize = theme === 'light' ? Math.random() * 1.5 + 1.0 : Math.random() * 1 + 0.5
             return {
               x: x,
               y: y,
               baseX: x,
               baseY: y,
-              size: Math.random() * 1 + 0.5,
-              color: theme === 'dark' ? 'white' : 'black',
-              scatteredColor: type === 'text' ? 'cyan' : (theme === 'dark' ? 'white' : 'black'),
+              size: pSize,
+              color: theme === 'dark' ? 'white' : '#1a1a1a',
+              scatteredColor: type === 'text' ? '__dynamic__' : (theme === 'dark' ? 'white' : 'black'),
               isAWS: false,
               life: Math.random() * 100 + 50
             }
@@ -167,7 +169,7 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
     }
 
     function createInitialParticles(scale: number) {
-      const baseParticleCount = type === 'icon' || type === 'image' ? 30000 : 9000
+      const baseParticleCount = type === 'icon' || type === 'image' ? 8000 : 3000
       let particleCount: number
       if (type === 'icon' || type === 'image') {
         particleCount = baseParticleCount
@@ -186,7 +188,7 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
       if (!ctx || !canvas) return;
       const gridSize = 40;
       ctx.save();
-      ctx.fillStyle = theme === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.18)';
+      ctx.fillStyle = theme === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.35)';
       for (let x = 0; x < canvas.width; x += gridSize) {
         for (let y = 0; y < canvas.height; y += gridSize) {
           ctx.beginPath();
@@ -206,7 +208,7 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
         w / 2, h / 2, Math.max(w, h) * 0.5
       );
       gradient.addColorStop(0, 'rgba(0,0,0,0)');
-      gradient.addColorStop(1, theme === 'dark' ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.10)');
+      gradient.addColorStop(1, theme === 'dark' ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.25)');
       ctx.save();
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
@@ -220,20 +222,49 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
     function animate(scale: number) {
       if (!ctx || !canvas) return
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.fillStyle = theme === 'dark' ? 'black' : 'white'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      if (type !== 'icon' && type !== 'image') drawGrid();
-      if (type !== 'icon' && type !== 'image') drawVignette();
+      if (type !== 'icon' && type !== 'image') {
+        ctx.fillStyle = theme === 'dark' ? 'black' : 'white'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        drawGrid();
+        drawVignette();
+      }
 
       const { x: mouseX, y: mouseY } = mousePositionRef.current
-      const maxDistance = 240
+      const maxDistance = type === 'icon' || type === 'image' ? 120 : 240
+
+      // Cache bounding rect for image/icon fuse effect
+      let localX = 0, localY = 0
+      if ((type === 'icon' || type === 'image') && mouseX > 0 && mouseY > 0) {
+        const rect = canvas.getBoundingClientRect()
+        localX = mouseX - rect.left
+        localY = mouseY - rect.top
+      }
+
+      // Dynamic accent color for scattered particles (reads from CSS var)
+      const accentHue = document.documentElement.style.getPropertyValue('--accent-hue') || '263'
+      const dynamicScatterColor = `hsl(${accentHue}, 90%, 66%)`
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i]
         if (type === 'icon' || type === 'image') {
-          // No interaction, always draw at base position
-          p.x += (p.baseX - p.x) * 0.1
-          p.y += (p.baseY - p.y) * 0.1
+          // Fuse effect: when cursor is near, snap particles tightly to base
+          const dx = localX - p.baseX
+          const dy = localY - p.baseY
+          const distance = Math.sqrt(dx * dx + dy * dy)
+
+          if (distance < maxDistance && mouseX > 0 && mouseY > 0) {
+            // Fuse: snap tightly to base position and pull slightly toward cursor
+            const fuseFactor = (maxDistance - distance) / maxDistance
+            const lerpSpeed = 0.1 + fuseFactor * 0.4 // 0.1 to 0.5 based on proximity
+            p.x += (p.baseX - p.x) * lerpSpeed
+            p.y += (p.baseY - p.y) * lerpSpeed
+            // Slight pull toward cursor for condensing feel
+            p.x += dx * fuseFactor * 0.02
+            p.y += dy * fuseFactor * 0.02
+          } else {
+            p.x += (p.baseX - p.x) * 0.05
+            p.y += (p.baseY - p.y) * 0.05
+          }
           ctx.fillStyle = p.color
         } else {
           const dx = mouseX - p.x
@@ -247,7 +278,7 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
             const moveY = Math.sin(angle) * force * 60
             p.x = p.baseX - moveX
             p.y = p.baseY - moveY
-            ctx.fillStyle = p.scatteredColor
+            ctx.fillStyle = p.scatteredColor === '__dynamic__' ? dynamicScatterColor : p.scatteredColor
           } else {
             p.x += (p.baseX - p.x) * 0.1
             p.y += (p.baseY - p.y) * 0.1
@@ -268,7 +299,7 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
         }
       }
 
-      const baseParticleCount = type === 'icon' || type === 'image' ? 30000 : 9000
+      const baseParticleCount = type === 'icon' || type === 'image' ? 8000 : 3000
       let targetParticleCount: number
       if (type === 'icon' || type === 'image') {
         targetParticleCount = baseParticleCount
@@ -346,25 +377,21 @@ export default function Component({ theme = 'dark', type = 'text', iconPath, ima
       }
     }
 
-    // Only add event listeners for text mode
-    if (type !== 'icon' && type !== 'image') {
-      window.addEventListener('resize', handleResize)
-      canvas.addEventListener('mousemove', handleMouseMove)
-      canvas.addEventListener('touchmove', handleTouchMove, { passive: false })
-      canvas.addEventListener('mouseleave', handleMouseLeave)
-      canvas.addEventListener('touchstart', handleTouchStart)
-      canvas.addEventListener('touchend', handleTouchEnd)
-    }
+    // Add event listeners for all modes
+    window.addEventListener('resize', handleResize)
+    canvas.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false })
+    canvas.addEventListener('mouseleave', handleMouseLeave)
+    canvas.addEventListener('touchstart', handleTouchStart)
+    canvas.addEventListener('touchend', handleTouchEnd)
 
     return () => {
-      if (type !== 'icon' && type !== 'image') {
-        window.removeEventListener('resize', handleResize)
-        canvas.removeEventListener('mousemove', handleMouseMove)
-        canvas.removeEventListener('touchmove', handleTouchMove)
-        canvas.removeEventListener('mouseleave', handleMouseLeave)
-        canvas.removeEventListener('touchstart', handleTouchStart)
-        canvas.removeEventListener('touchend', handleTouchEnd)
-      }
+      window.removeEventListener('resize', handleResize)
+      canvas.removeEventListener('mousemove', handleMouseMove)
+      canvas.removeEventListener('touchmove', handleTouchMove)
+      canvas.removeEventListener('mouseleave', handleMouseLeave)
+      canvas.removeEventListener('touchstart', handleTouchStart)
+      canvas.removeEventListener('touchend', handleTouchEnd)
       cancelAnimationFrame(animationFrameId)
     }
   }, [isMobile, theme, type, iconPath, imageSrc, size])

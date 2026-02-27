@@ -22,7 +22,7 @@ export default function StartupLoader() {
   useEffect(() => {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const numParticles = Math.floor((width * height) / 500); // extremely dense
+    const numParticles = Math.floor((width * height) / 2000); // reduced for performance
     const particles: Particle[] = [];
     for (let i = 0; i < numParticles; i++) {
       const radius = 0.7 + Math.random() * 0.7; // small pixel size
